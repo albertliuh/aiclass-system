@@ -19,10 +19,8 @@ createApp({
             userAnswer: '',           // 用户当前答案（单选/判断）或数组（多选）
             currentExamAnswers: [],   // 当前考试的答题记录
 
-            // 答案反馈
-            showingAnswer: false,     // 是否显示答案反馈
-            lastAnswerCorrect: false, // 上一题是否正确
-            lastUserAnswer: '',       // 上一题用户答案
+            // 答案反馈（紧凑显示在页面上方）
+            lastAnswerFeedback: null, // 上一题的答案反馈信息
 
             // 考试统计
             currentExamCorrect: 0,    // 当前考试正确数
@@ -135,7 +133,7 @@ createApp({
             this.currentExamCorrect = 0;
             this.currentExamIncorrect = 0;
             this.resetAnswer();
-            this.showingAnswer = false;
+            this.lastAnswerFeedback = null;
 
             this.currentPage = 'exam';
         },
@@ -180,26 +178,24 @@ createApp({
                 this.currentExamIncorrect++;
             }
 
-            // 保存上一题答案信息
-            this.lastAnswerCorrect = isCorrect;
-            this.lastUserAnswer = userAns;
+            // 保存答案反馈信息（用于在下一题顶部显示）
+            this.lastAnswerFeedback = {
+                questionIndex: this.currentQuestionIndex + 1,
+                userAnswer: userAns,
+                correctAnswer: question.answer,
+                isCorrect: isCorrect
+            };
 
-            // 显示答案反馈
-            this.showingAnswer = true;
-        },
-
-        /**
-         * 继续到下一题
-         */
-        continueToNext() {
-            this.showingAnswer = false;
-
+            // 检查是否是最后一题
             if (this.currentQuestionIndex < this.currentExamQuestions.length - 1) {
+                // 不是最后一题，移动到下一题
                 this.currentQuestionIndex++;
                 this.resetAnswer();
             } else {
-                // 最后一题，直接交卷
-                this.finishExam();
+                // 是最后一题，自动交卷
+                setTimeout(() => {
+                    this.finishExam();
+                }, 1500); // 延迟1.5秒，让用户看到最后一题的反馈
             }
         },
 
@@ -210,7 +206,8 @@ createApp({
             if (this.currentQuestionIndex > 0) {
                 this.currentQuestionIndex--;
                 this.resetAnswer();
-                this.showingAnswer = false;
+                // 清除答案反馈（因为是回退）
+                this.lastAnswerFeedback = null;
             }
         },
 
@@ -234,7 +231,7 @@ createApp({
         jumpToQuestion(index) {
             this.currentQuestionIndex = index;
             this.resetAnswer();
-            this.showingAnswer = false;
+            this.lastAnswerFeedback = null;
             this.currentPage = 'exam';
         },
 

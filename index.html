@@ -75,7 +75,21 @@
             </div>
 
             <div class="container">
-                <div v-if="!showingAnswer" class="question-card">
+                <!-- 上一题答案反馈（紧凑显示） -->
+                <div v-if="lastAnswerFeedback" class="answer-feedback-compact">
+                    <div :class="['feedback-header', lastAnswerFeedback.isCorrect ? 'correct' : 'incorrect']">
+                        <span class="feedback-icon">{{ lastAnswerFeedback.isCorrect ? '✓' : '✗' }}</span>
+                        <span class="feedback-text">
+                            第{{ lastAnswerFeedback.questionIndex }}题 {{ lastAnswerFeedback.isCorrect ? '正确' : '错误' }}
+                        </span>
+                        <span class="feedback-answer">
+                            你的答案: {{ lastAnswerFeedback.userAnswer }} | 正确答案: {{ lastAnswerFeedback.correctAnswer }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 当前题目 -->
+                <div class="question-card">
                     <div class="question-type">{{ currentQuestion.type }}</div>
                     <div class="question-text">{{ currentQuestion.question }}</div>
 
@@ -109,24 +123,6 @@
                             ✅ 交卷
                         </button>
                     </div>
-                </div>
-
-                <!-- 答案反馈 -->
-                <div v-if="showingAnswer" class="answer-feedback">
-                    <div :class="['feedback-result', lastAnswerCorrect ? 'correct' : 'incorrect']">
-                        <div class="feedback-icon">{{ lastAnswerCorrect ? '✓' : '✗' }}</div>
-                        <div class="feedback-text">{{ lastAnswerCorrect ? '回答正确！' : '回答错误' }}</div>
-                    </div>
-                    <div class="answer-details">
-                        <p><strong>你的答案:</strong> {{ lastUserAnswer }}</p>
-                        <p><strong>正确答案:</strong> {{ currentQuestion.answer }}</p>
-                    </div>
-                    <div class="cumulative-stats">
-                        <p>本次累计: 正确 <span class="correct-count">{{ currentExamCorrect }}</span> 题，错误 <span class="incorrect-count">{{ currentExamIncorrect }}</span> 题</p>
-                    </div>
-                    <button @click="continueToNext" class="btn btn-primary btn-large">
-                        继续 ➡
-                    </button>
                 </div>
             </div>
         </div>
