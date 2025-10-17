@@ -36,16 +36,12 @@ function parseCSV(file) {
  * @returns {Array} 题目数组
  */
 function parseCSVText(text) {
-    const lines = text.split('\n').filter(line => line.trim());
     const questions = [];
+    const rows = parseCSVRows(text);
 
     // 跳过标题行，从第二行开始
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        // 按逗号分割，但要注意引号内的逗号
-        const fields = parseCSVLine(line);
+    for (let i = 1; i < rows.length; i++) {
+        const fields = rows[i];
 
         if (fields.length < 9) continue; // 确保有足够的字段
 
@@ -59,18 +55,18 @@ function parseCSVText(text) {
             options.A = '对';
             options.B = '错';
         } else {
-            // 其他题型使用CSV中的选项
-            if (optA && optA.trim()) options.A = optA.trim();
-            if (optB && optB.trim()) options.B = optB.trim();
-            if (optC && optC.trim()) options.C = optC.trim();
-            if (optD && optD.trim()) options.D = optD.trim();
-            if (optE && optE.trim()) options.E = optE.trim();
+            // 其他题型使用CSV中的选项，清理换行符
+            if (optA && optA.trim()) options.A = optA.trim().replace(/\n+/g, ' ');
+            if (optB && optB.trim()) options.B = optB.trim().replace(/\n+/g, ' ');
+            if (optC && optC.trim()) options.C = optC.trim().replace(/\n+/g, ' ');
+            if (optD && optD.trim()) options.D = optD.trim().replace(/\n+/g, ' ');
+            if (optE && optE.trim()) options.E = optE.trim().replace(/\n+/g, ' ');
         }
 
         const questionObj = {
             id: id.trim(),
             type: type.trim(),
-            question: question.trim(),
+            question: question.trim().replace(/\n+/g, ' '),
             options: options,
             answer: answer.trim(),
             statistics: {
@@ -87,32 +83,64 @@ function parseCSVText(text) {
 }
 
 /**
- * 解析CSV行，处理引号和逗号
- * @param {string} line - CSV行
- * @returns {Array} 字段数组
+ * 解析CSV文本为行数组（处理引号内的换行符）
+ * @param {string} text - CSV文本
+ * @returns {Array<Array>} 二维数组，每行是一个字段数组
  */
-function parseCSVLine(line) {
-    const fields = [];
-    let field = '';
+function parseCSVRows(text) {
+    const rows = [];
+    const lines = text.split('\n');
+    let currentRow = [];
+    let currentField = '';
     let inQuotes = false;
 
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const line = lines[lineIndex];
 
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            fields.push(field);
-            field = '';
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+
+            if (char === '"') {
+                // 检查是否是转义的引号（两个连续引号）
+                if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                    currentField += '"';
+                    i++; // 跳过下一个引号
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                currentRow.push(currentField.trim());
+                currentField = '';
+            } else {
+                currentField += char;
+            }
+        }
+
+        // 如果在引号内，添加换行符并继续下一行
+        if (inQuotes) {
+            currentField += '\n';
         } else {
-            field += char;
+            // 行结束，添加最后一个字段
+            currentRow.push(currentField.trim());
+            currentField = '';
+
+            // 如果这一行有内容，添加到结果中
+            if (currentRow.some(field => field.length > 0)) {
+                rows.push(currentRow);
+            }
+            currentRow = [];
         }
     }
 
-    // 添加最后一个字段
-    fields.push(field);
+    // 处理最后一行（如果有未完成的）
+    if (currentRow.length > 0 || currentField.length > 0) {
+        currentRow.push(currentField.trim());
+        if (currentRow.some(field => field.length > 0)) {
+            rows.push(currentRow);
+        }
+    }
 
-    return fields;
+    return rows;
 }
 
 /**
