@@ -582,6 +582,172 @@ body {
     gap: 12px;
 }
 
+/* 复习模式页面 */
+.review-page {
+    padding-top: 0;
+}
+
+.review-header {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.review-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.review-title-bar h1 {
+    color: #667eea;
+    font-size: 1.8em;
+    margin: 0;
+}
+
+.review-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.jump-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.jump-controls label {
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.review-info {
+    color: #666;
+    font-weight: 500;
+}
+
+.review-container {
+    padding-bottom: 40px;
+}
+
+.review-question-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    scroll-margin-top: 120px;
+}
+
+.review-question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.review-question-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.review-question-type {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.review-question-text {
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+.review-options {
+    margin-bottom: 20px;
+}
+
+.review-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.review-option.correct-option {
+    background: #f0fff4;
+    border-color: #48bb78;
+}
+
+.option-key {
+    font-weight: bold;
+    color: #667eea;
+    margin-right: 12px;
+    min-width: 24px;
+}
+
+.option-value {
+    flex: 1;
+    line-height: 1.5;
+}
+
+.correct-badge {
+    color: #48bb78;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 12px;
+}
+
+.review-answer {
+    background: #edf2f7;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #48bb78;
+}
+
+.review-answer strong {
+    color: #2d3748;
+}
+
+.answer-text {
+    color: #48bb78;
+    font-weight: bold;
+    font-size: 16px;
+    margin-left: 8px;
+}
+
+.review-stats {
+    display: flex;
+    gap: 20px;
+    padding: 12px;
+    background: #f7fafc;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.review-stats span {
+    display: flex;
+    align-items: center;
+}
+
 /* 响应式设计 */
 @media (max-width: 600px) {
     body {
@@ -620,5 +786,35 @@ body {
 
     .setting-item label {
         min-width: auto;
+    }
+
+    /* 复习模式响应式 */
+    .review-title-bar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .review-title-bar h1 {
+        font-size: 1.4em;
+    }
+
+    .review-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .jump-controls {
+        flex-wrap: wrap;
+    }
+
+    .review-question-card {
+        padding: 16px;
+        scroll-margin-top: 140px;
+    }
+
+    .review-stats {
+        flex-direction: column;
+        gap: 8px;
     }
 }

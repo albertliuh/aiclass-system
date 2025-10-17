@@ -7,7 +7,7 @@ const { createApp } = Vue;
 createApp({
     data() {
         return {
-            // 当前页面：home, exam, overview, report
+            // 当前页面：home, exam, overview, report, review
             currentPage: 'home',
 
             // 题库数据
@@ -31,6 +31,9 @@ createApp({
 
             // 设置
             consecutiveCorrectThreshold: 3, // 连续答对阈值
+
+            // 复习模式
+            jumpToQuestionNumber: 1,  // 跳转到的题号
         };
     },
 
@@ -371,6 +374,53 @@ createApp({
             // 加载设置
             const savedThreshold = loadFromLocalStorage('consecutiveCorrectThreshold', 3);
             this.consecutiveCorrectThreshold = savedThreshold;
+        },
+
+        /**
+         * 开始复习模式
+         */
+        startReview() {
+            if (this.questions.length === 0) {
+                alert('没有可复习的题目！请先导入题库。');
+                return;
+            }
+
+            this.jumpToQuestionNumber = 1;
+            this.currentPage = 'review';
+        },
+
+        /**
+         * 判断选项是否为正确答案
+         */
+        isCorrectOption(question, optionKey) {
+            if (question.type === '多选') {
+                // 多选题：检查选项键是否在正确答案中
+                return question.answer.includes(optionKey);
+            } else {
+                // 单选题和判断题：直接比较
+                return question.answer === optionKey;
+            }
+        },
+
+        /**
+         * 在复习模式中跳转到指定题目
+         */
+        jumpToQuestionInReview() {
+            const questionNumber = this.jumpToQuestionNumber;
+
+            if (questionNumber < 1 || questionNumber > this.questions.length) {
+                alert(`请输入 1 到 ${this.questions.length} 之间的题号`);
+                return;
+            }
+
+            // 滚动到指定题目
+            const targetElement = document.getElementById(`review-q-${questionNumber}`);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         }
     },
 

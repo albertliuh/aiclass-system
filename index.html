@@ -43,6 +43,14 @@
                     </p>
                 </div>
 
+                <div class="card" v-if="questions.length > 0">
+                    <h2>复习模式</h2>
+                    <p class="info-text">查看所有题目和正确答案，方便复习记忆</p>
+                    <button @click="startReview" class="btn btn-info btn-large">
+                        📚 进入复习模式
+                    </button>
+                </div>
+
                 <div class="card" v-if="examHistory.length > 0">
                     <h2>历史成绩</h2>
                     <div class="history-list">
@@ -202,6 +210,64 @@
                     <button @click="startExam" class="btn btn-success btn-large">
                         再考一次
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 复习模式页面 -->
+        <div v-if="currentPage === 'review'" class="page review-page">
+            <div class="review-header">
+                <div class="container">
+                    <div class="review-title-bar">
+                        <h1>复习模式</h1>
+                        <button @click="backToHome" class="btn btn-secondary">
+                            ← 返回首页
+                        </button>
+                    </div>
+                    <div class="review-controls">
+                        <div class="jump-controls">
+                            <label>跳转到题号：</label>
+                            <input type="number" v-model.number="jumpToQuestionNumber" min="1" :max="questions.length" class="input-number">
+                            <button @click="jumpToQuestionInReview" class="btn btn-primary">
+                                跳转
+                            </button>
+                        </div>
+                        <div class="review-info">
+                            共 {{ questions.length }} 题
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container review-container">
+                <!-- 所有题目连续显示 -->
+                <div v-for="(q, index) in questions" :key="q.id" :id="'review-q-' + (index + 1)" class="review-question-card">
+                    <div class="review-question-header">
+                        <span class="review-question-number">第 {{ index + 1 }} 题</span>
+                        <span class="review-question-type">{{ q.type }}</span>
+                    </div>
+
+                    <div class="review-question-text">{{ q.question }}</div>
+
+                    <div class="review-options">
+                        <div v-for="(value, key) in q.options" :key="key"
+                             :class="['review-option', isCorrectOption(q, key) ? 'correct-option' : '']">
+                            <span class="option-key">{{ key }}</span>
+                            <span class="option-value">{{ value }}</span>
+                            <span v-if="isCorrectOption(q, key)" class="correct-badge">✓ 正确答案</span>
+                        </div>
+                    </div>
+
+                    <div class="review-answer">
+                        <strong>正确答案：</strong>
+                        <span class="answer-text">{{ q.answer }}</span>
+                    </div>
+
+                    <div v-if="q.statistics.totalAttempts > 0" class="review-stats">
+                        <span>答题次数: {{ q.statistics.totalAttempts }}</span>
+                        <span>正确次数: {{ q.statistics.correctAttempts }}</span>
+                        <span>连续答对: {{ q.statistics.consecutiveCorrect }}</span>
+                    </div>
                 </div>
             </div>
         </div>
