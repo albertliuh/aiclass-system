@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>在线答题考试系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 主页面 -->
+        <div v-if="currentPage === 'home'" class="page home-page">
+            <div class="container">
+                <h1 class="title">在线答题考试系统</h1>
+
+                <div class="card">
+                    <h2>题库管理</h2>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="csvFile" @change="handleFileSelect" accept=".csv" hidden>
+                        <label for="csvFile" class="btn btn-primary">
+                            📁 导入题库 (CSV)
+                        </label>
+                    </div>
+                    <p v-if="questions.length > 0" class="info-text">
+                        当前题库: {{ questions.length }} 道题目
+                    </p>
+                </div>
+
+                <div class="card" v-if="questions.length > 0">
+                    <h2>开始考试</h2>
+                    <p class="info-text">可用题目: {{ availableQuestions.length }} 道</p>
+                    <button @click="startExam" class="btn btn-success btn-large" :disabled="availableQuestions.length === 0">
+                        🎯 开始考试
+                    </button>
+                    <p v-if="availableQuestions.length === 0" class="warning-text">
+                        所有题目都已连续答对{{ consecutiveCorrectThreshold }}次，无可用题目
+                    </p>
+                </div>
+
+                <div class="card" v-if="examHistory.length > 0">
+                    <h2>历史成绩</h2>
+                    <div class="history-list">
+                        <div v-for="(record, index) in examHistory" :key="index" class="history-item">
+                            <div class="history-time">{{ formatTime(record.startTime) }}</div>
+                            <div class="history-score">
+                                正确: {{ record.score.correct }} / {{ record.score.total }}
+                                ({{ record.score.accuracy }})
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card settings-card">
+                    <h2>设置</h2>
+                    <div class="setting-item">
+                        <label>连续答对次数阈值:</label>
+                        <input type="number" v-model.number="consecutiveCorrectThreshold" min="1" max="10" class="input-number">
+                        <span class="setting-desc">题目连续答对此次数后将不再出现</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 考试页面 -->
+        <div v-if="currentPage === 'exam'" class="page exam-page">
+            <div class="exam-header">
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{width: progressPercent + '%'}"></div>
+                </div>
+                <div class="exam-info">
+                    <span>题号: {{ currentQuestionIndex + 1 }} / {{ currentExamQuestions.length }}</span>
+                    <span>本次正确: <span class="correct-count">{{ currentExamCorrect }}</span></span>
+                    <span>本次错误: <span class="incorrect-count">{{ currentExamIncorrect }}</span></span>
+                </div>
+            </div>
+
+            <div class="container">
+                <div v-if="!showingAnswer" class="question-card">
+                    <div class="question-type">{{ currentQuestion.type }}</div>
+                    <div class="question-text">{{ currentQuestion.question }}</div>
+
+                    <!-- 单选题和判断题 -->
+                    <div v-if="currentQuestion.type === '单选' || currentQuestion.type === '判断'" class="options">
+                        <label v-for="(value, key) in currentQuestion.options" :key="key" class="option-label">
+                            <input type="radio" :name="'q' + currentQuestion.id" :value="key" v-model="userAnswer">
+                            <span class="option-text">{{ key }}. {{ value }}</span>
+                        </label>
+                    </div>
+
+                    <!-- 多选题 -->
+                    <div v-if="currentQuestion.type === '多选'" class="options">
+                        <label v-for="(value, key) in currentQuestion.options" :key="key" class="option-label">
+                            <input type="checkbox" :value="key" v-model="userAnswer">
+                            <span class="option-text">{{ key }}. {{ value }}</span>
+                        </label>
+                    </div>
+
+                    <div class="exam-actions">
+                        <button @click="previousQuestion" class="btn btn-secondary" :disabled="currentQuestionIndex === 0">
+                            ⬅ 上一题
+                        </button>
+                        <button @click="showOverview" class="btn btn-info">
+                            📋 总览
+                        </button>
+                        <button @click="submitAnswer" class="btn btn-primary" :disabled="!hasAnswer">
+                            下一题 ➡
+                        </button>
+                        <button @click="finishExam" class="btn btn-warning">
+                            ✅ 交卷
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 答案反馈 -->
+                <div v-if="showingAnswer" class="answer-feedback">
+                    <div :class="['feedback-result', lastAnswerCorrect ? 'correct' : 'incorrect']">
+                        <div class="feedback-icon">{{ lastAnswerCorrect ? '✓' : '✗' }}</div>
+                        <div class="feedback-text">{{ lastAnswerCorrect ? '回答正确！' : '回答错误' }}</div>
+                    </div>
+                    <div class="answer-details">
+                        <p><strong>你的答案:</strong> {{ lastUserAnswer }}</p>
+                        <p><strong>正确答案:</strong> {{ currentQuestion.answer }}</p>
+                    </div>
+                    <div class="cumulative-stats">
+                        <p>本次累计: 正确 <span class="correct-count">{{ currentExamCorrect }}</span> 题，错误 <span class="incorrect-count">{{ currentExamIncorrect }}</span> 题</p>
+                    </div>
+                    <button @click="continueToNext" class="btn btn-primary btn-large">
+                        继续 ➡
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 总览页面 -->
+        <div v-if="currentPage === 'overview'" class="page overview-page">
+            <div class="container">
+                <h2>题目总览</h2>
+                <div class="overview-legend">
+                    <span class="legend-item"><span class="dot unanswered"></span> 未答题</span>
+                    <span class="legend-item"><span class="dot correct"></span> 答对</span>
+                    <span class="legend-item"><span class="dot incorrect"></span> 答错</span>
+                </div>
+                <div class="question-grid">
+                    <div v-for="(q, index) in currentExamQuestions" :key="index"
+                         :class="['question-number', getQuestionStatus(index)]"
+                         @click="jumpToQuestion(index)">
+                        {{ index + 1 }}
+                    </div>
+                </div>
+                <button @click="backToExam" class="btn btn-primary btn-large">
+                    返回答题
+                </button>
+            </div>
+        </div>
+
+        <!-- 成绩报告页面 -->
+        <div v-if="currentPage === 'report'" class="page report-page">
+            <div class="container">
+                <h1>考试成绩报告</h1>
+                <div class="score-card">
+                    <div class="score-big">{{ currentExamScore.accuracy }}</div>
+                    <div class="score-label">正确率</div>
+                </div>
+                <div class="score-details">
+                    <div class="score-item">
+                        <div class="score-value">{{ currentExamScore.total }}</div>
+                        <div class="score-label">总题数</div>
+                    </div>
+                    <div class="score-item correct">
+                        <div class="score-value">{{ currentExamScore.correct }}</div>
+                        <div class="score-label">答对</div>
+                    </div>
+                    <div class="score-item incorrect">
+                        <div class="score-value">{{ currentExamScore.incorrect }}</div>
+                        <div class="score-label">答错</div>
+                    </div>
+                </div>
+
+                <div class="answer-review">
+                    <h3>答题详情</h3>
+                    <div v-for="(answer, index) in currentExamAnswers" :key="index" class="review-item">
+                        <div class="review-header">
+                            <span class="review-number">第{{ index + 1 }}题</span>
+                            <span :class="['review-result', answer.isCorrect ? 'correct' : 'incorrect']">
+                                {{ answer.isCorrect ? '✓ 正确' : '✗ 错误' }}
+                            </span>
+                        </div>
+                        <div class="review-question">{{ answer.question }}</div>
+                        <div v-if="!answer.isCorrect" class="review-answers">
+                            <p>你的答案: {{ answer.userAnswer }}</p>
+                            <p>正确答案: {{ answer.correctAnswer }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-actions">
+                    <button @click="backToHome" class="btn btn-primary btn-large">
+                        返回首页
+                    </button>
+                    <button @click="startExam" class="btn btn-success btn-large">
+                        再考一次
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
