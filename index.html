@@ -24,6 +24,12 @@
                     <p v-if="questions.length > 0" class="info-text">
                         当前题库: {{ questions.length }} 道题目
                     </p>
+                    <div v-if="questions.length > 0 || examHistory.length > 0" class="clear-section">
+                        <button @click="clearAllData" class="btn btn-danger">
+                            🗑️ 清空所有数据
+                        </button>
+                        <p class="warning-text">清空题库、答题记录、统计信息等所有数据</p>
+                    </div>
                 </div>
 
                 <div class="card" v-if="questions.length > 0">

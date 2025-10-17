@@ -88,6 +88,11 @@ body {
     color: white;
 }
 
+.btn-danger {
+    background: #e53e3e;
+    color: white;
+}
+
 .btn-large {
     padding: 16px 32px;
     font-size: 18px;
@@ -115,6 +120,13 @@ body {
     color: #e53e3e;
     margin-top: 12px;
     font-size: 14px;
+}
+
+/* 清理数据区域 */
+.clear-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
 }
 
 /* 历史记录 */

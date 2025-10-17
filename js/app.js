@@ -126,8 +126,8 @@ createApp({
                 return;
             }
 
-            // 随机打乱题目顺序
-            this.currentExamQuestions = shuffleArray(this.availableQuestions);
+            // 保持CSV导入的原始顺序
+            this.currentExamQuestions = [...this.availableQuestions];
             this.currentQuestionIndex = 0;
             this.currentExamAnswers = [];
             this.currentExamCorrect = 0;
@@ -316,6 +316,40 @@ createApp({
          */
         formatTime(timestamp) {
             return formatTime(timestamp);
+        },
+
+        /**
+         * 清空所有数据
+         */
+        clearAllData() {
+            if (!confirm('确定要清空所有数据吗？\n\n将清除：\n- 题库数据\n- 答题历史\n- 题目统计信息\n- 所有设置\n\n此操作无法撤销！')) {
+                return;
+            }
+
+            // 清除LocalStorage中的所有数据
+            localStorage.removeItem('questions');
+            localStorage.removeItem('questionStats');
+            localStorage.removeItem('examHistory');
+            localStorage.removeItem('consecutiveCorrectThreshold');
+
+            // 重置Vue数据
+            this.questions = [];
+            this.examHistory = [];
+            this.consecutiveCorrectThreshold = 3;
+            this.currentExamQuestions = [];
+            this.currentExamAnswers = [];
+            this.currentQuestionIndex = 0;
+            this.currentExamCorrect = 0;
+            this.currentExamIncorrect = 0;
+            this.lastAnswerFeedback = null;
+
+            // 重置文件输入
+            const fileInput = document.getElementById('csvFile');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+
+            alert('所有数据已清空！');
         },
 
         /**
