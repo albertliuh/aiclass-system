@@ -34,6 +34,9 @@ createApp({
 
             // 复习模式
             jumpToQuestionNumber: 1,  // 跳转到的题号
+
+            // 彩色复习模式
+            coloredJumpToQuestionNumber: 1,  // 彩色复习模式跳转题号
         };
     },
 
@@ -88,6 +91,20 @@ createApp({
                 incorrect,
                 accuracy
             };
+        },
+
+        /**
+         * 是否有带颜色信息的题目
+         */
+        hasColoredQuestions() {
+            return this.questions.some(q => q.source === 'xlsx' && q.optionColors);
+        },
+
+        /**
+         * 筛选出带颜色信息的题目
+         */
+        coloredQuestions() {
+            return this.questions.filter(q => q.source === 'xlsx' && q.optionColors);
         }
     },
 
@@ -430,6 +447,68 @@ createApp({
             if (!text) return '';
             // 将所有"不"字替换为带有黄色背景的 span 标签
             return text.replace(/不/g, '<span class="highlight-char">不</span>');
+        },
+
+        /**
+         * 处理 XLSX 文件选择
+         */
+        async handleXLSXFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const questions = await parseXLSX(file);
+
+                // 加载已保存的统计数据
+                const savedStats = loadFromLocalStorage('questionStats', {});
+                questions.forEach(q => {
+                    if (savedStats[q.id]) {
+                        q.statistics = savedStats[q.id];
+                    }
+                });
+
+                this.questions = questions;
+                saveToLocalStorage('questions', questions);
+
+                alert(`成功导入 ${questions.length} 道题目（含颜色信息）！`);
+            } catch (error) {
+                alert('导入失败：' + error.message);
+                console.error(error);
+            }
+        },
+
+        /**
+         * 开始彩色复习模式
+         */
+        startColoredReview() {
+            if (this.coloredQuestions.length === 0) {
+                alert('没有带颜色信息的题目！请导入 XLSX 文件。');
+                return;
+            }
+
+            this.coloredJumpToQuestionNumber = 1;
+            this.currentPage = 'colored-review';
+        },
+
+        /**
+         * 在彩色复习模式中跳转到指定题目
+         */
+        jumpToColoredQuestion() {
+            const questionNumber = this.coloredJumpToQuestionNumber;
+
+            if (questionNumber < 1 || questionNumber > this.coloredQuestions.length) {
+                alert(`请输入 1 到 ${this.coloredQuestions.length} 之间的题号`);
+                return;
+            }
+
+            // 滚动到指定题目
+            const targetElement = document.getElementById(`colored-q-${questionNumber}`);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         }
     },
 

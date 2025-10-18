@@ -20,9 +20,15 @@
                         <label for="csvFile" class="btn btn-primary">
                             📁 导入题库 (CSV)
                         </label>
+
+                        <input type="file" id="xlsxFile" @change="handleXLSXFileSelect" accept=".xlsx,.xls" hidden>
+                        <label for="xlsxFile" class="btn btn-success">
+                            📊 导入题库 (XLSX)
+                        </label>
                     </div>
                     <p v-if="questions.length > 0" class="info-text">
                         当前题库: {{ questions.length }} 道题目
+                        <span v-if="hasColoredQuestions" class="colored-tag">含颜色标记</span>
                     </p>
                     <div v-if="questions.length > 0 || examHistory.length > 0" class="clear-section">
                         <button @click="clearAllData" class="btn btn-danger">
@@ -48,6 +54,14 @@
                     <p class="info-text">查看所有题目和正确答案，方便复习记忆</p>
                     <button @click="startReview" class="btn btn-info btn-large">
                         📚 进入复习模式
+                    </button>
+                </div>
+
+                <div class="card" v-if="hasColoredQuestions">
+                    <h2>彩色复习模式</h2>
+                    <p class="info-text">查看带颜色标记的题目选项（XLSX格式）</p>
+                    <button @click="startColoredReview" class="btn btn-success btn-large">
+                        🎨 进入彩色复习模式
                     </button>
                 </div>
 
@@ -271,10 +285,70 @@
                 </div>
             </div>
         </div>
+
+        <!-- 彩色复习模式页面 -->
+        <div v-if="currentPage === 'colored-review'" class="page colored-review-page">
+            <div class="review-header">
+                <div class="container">
+                    <div class="review-title-bar">
+                        <h1>彩色复习模式</h1>
+                        <button @click="backToHome" class="btn btn-secondary">
+                            ← 返回首页
+                        </button>
+                    </div>
+                    <div class="review-controls">
+                        <div class="jump-controls">
+                            <label>跳转到题号：</label>
+                            <input type="number" v-model.number="coloredJumpToQuestionNumber" min="1" :max="coloredQuestions.length" class="input-number">
+                            <button @click="jumpToColoredQuestion" class="btn btn-primary">
+                                跳转
+                            </button>
+                        </div>
+                        <div class="review-info">
+                            共 {{ coloredQuestions.length }} 题
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container review-container">
+                <!-- 所有带颜色的题目连续显示 -->
+                <div v-for="(q, index) in coloredQuestions" :key="q.id" :id="'colored-q-' + (index + 1)" class="colored-question-card">
+                    <div class="colored-question-header">
+                        <span class="colored-question-number">第 {{ index + 1 }} 题</span>
+                        <span class="colored-question-type">{{ q.type }}</span>
+                    </div>
+
+                    <div class="colored-question-text" v-html="highlightText(q.question)"></div>
+
+                    <div class="colored-options">
+                        <div v-for="(value, key) in q.options" :key="key"
+                             class="colored-option"
+                             :style="{ backgroundColor: q.optionColors[key] || 'transparent' }">
+                            <span class="option-key">{{ key }}</span>
+                            <span class="option-value">{{ value }}</span>
+                        </div>
+                    </div>
+
+                    <div class="colored-answer">
+                        <strong>正确答案：</strong>
+                        <span class="answer-text">{{ q.answer }}</span>
+                    </div>
+
+                    <div v-if="q.statistics.totalAttempts > 0" class="colored-stats">
+                        <span>答题次数: {{ q.statistics.totalAttempts }}</span>
+                        <span>正确次数: {{ q.statistics.correctAttempts }}</span>
+                        <span>连续答对: {{ q.statistics.consecutiveCorrect }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 使用Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- SheetJS 用于解析 xlsx 文件 -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
 </body>

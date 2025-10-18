@@ -110,10 +110,23 @@ body {
 /* 文件输入 */
 .file-input-wrapper {
     margin: 20px 0;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .file-input-wrapper label {
     display: inline-block;
+}
+
+.colored-tag {
+    display: inline-block;
+    background: #48bb78;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 8px;
 }
 
 /* 信息文本 */
@@ -824,4 +837,112 @@ body {
         flex-direction: column;
         gap: 8px;
     }
+
+    /* 彩色复习模式响应式 */
+    .colored-question-card {
+        padding: 16px;
+        scroll-margin-top: 140px;
+    }
+
+    .colored-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+/* 彩色复习模式页面 */
+.colored-review-page {
+    padding-top: 0;
+}
+
+.colored-question-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    scroll-margin-top: 120px;
+}
+
+.colored-question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.colored-question-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.colored-question-type {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.colored-question-text {
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+.colored-options {
+    margin-bottom: 20px;
+}
+
+.colored-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.colored-option .option-key {
+    font-weight: bold;
+    color: #2d3748;
+    margin-right: 12px;
+    min-width: 24px;
+}
+
+.colored-option .option-value {
+    flex: 1;
+    line-height: 1.5;
+    color: #2d3748;
+}
+
+.colored-answer {
+    background: #edf2f7;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #48bb78;
+}
+
+.colored-answer strong {
+    color: #2d3748;
+}
+
+.colored-stats {
+    display: flex;
+    gap: 20px;
+    padding: 12px;
+    background: #f7fafc;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.colored-stats span {
+    display: flex;
+    align-items: center;
 }

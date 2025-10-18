@@ -232,3 +232,153 @@ function calculateAccuracy(correct, total) {
     const accuracy = (correct / total * 100).toFixed(1);
     return accuracy + '%';
 }
+
+/**
+ * 解析 XLSX 文件（包含单元格颜色信息）
+ * @param {File} file - XLSX 文件对象
+ * @returns {Promise<Array>} 解析后的题目数组（包含颜色信息）
+ */
+function parseXLSX(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellStyles: true });
+
+                // 获取第一个工作表
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                const questions = parseXLSXWorksheet(worksheet, workbook);
+                resolve(questions);
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        reader.onerror = function() {
+            reject(new Error('文件读取失败'));
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+/**
+ * 解析 XLSX 工作表内容
+ * @param {Object} worksheet - 工作表对象
+ * @param {Object} workbook - 工作簿对象
+ * @returns {Array} 题目数组
+ */
+function parseXLSXWorksheet(worksheet, workbook) {
+    const questions = [];
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+
+    // 从第二行开始读取（跳过标题行）
+    for (let rowNum = range.s.r + 1; rowNum <= range.e.r; rowNum++) {
+        const row = [];
+        const rowColors = [];
+
+        // 读取每一列的值和颜色
+        for (let colNum = range.s.c; colNum <= range.e.c; colNum++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: rowNum, c: colNum });
+            const cell = worksheet[cellAddress];
+
+            let value = '';
+            let color = null;
+
+            if (cell) {
+                value = cell.v || '';
+
+                // 获取单元格背景颜色
+                if (cell.s && cell.s.fgColor) {
+                    color = rgbToHex(cell.s.fgColor.rgb);
+                } else if (cell.s && cell.s.bgColor) {
+                    color = rgbToHex(cell.s.bgColor.rgb);
+                }
+            }
+
+            row.push(value);
+            rowColors.push(color);
+        }
+
+        if (row.length < 9) continue; // 确保有足够的字段
+
+        const [id, type, question, optA, optB, optC, optD, optE, answer] = row;
+
+        // 构建选项对象（包含颜色）
+        const options = {};
+        const optionColors = {};
+
+        // 如果是判断题，使用固定的对/错选项
+        if (String(type).trim() === '判断') {
+            options.A = '对';
+            options.B = '错';
+            optionColors.A = rowColors[3] || null;
+            optionColors.B = rowColors[4] || null;
+        } else {
+            // 其他题型使用 XLSX 中的选项
+            if (optA && String(optA).trim()) {
+                options.A = String(optA).trim();
+                optionColors.A = rowColors[3] || null;
+            }
+            if (optB && String(optB).trim()) {
+                options.B = String(optB).trim();
+                optionColors.B = rowColors[4] || null;
+            }
+            if (optC && String(optC).trim()) {
+                options.C = String(optC).trim();
+                optionColors.C = rowColors[5] || null;
+            }
+            if (optD && String(optD).trim()) {
+                options.D = String(optD).trim();
+                optionColors.D = rowColors[6] || null;
+            }
+            if (optE && String(optE).trim()) {
+                options.E = String(optE).trim();
+                optionColors.E = rowColors[7] || null;
+            }
+        }
+
+        const questionObj = {
+            id: String(id).trim(),
+            type: String(type).trim(),
+            question: String(question).trim(),
+            options: options,
+            optionColors: optionColors, // 新增：选项颜色信息
+            answer: String(answer).trim(),
+            statistics: {
+                consecutiveCorrect: 0,
+                totalAttempts: 0,
+                correctAttempts: 0
+            },
+            source: 'xlsx' // 标记数据来源
+        };
+
+        questions.push(questionObj);
+    }
+
+    return questions;
+}
+
+/**
+ * 将 RGB 对象转换为十六进制颜色代码
+ * @param {string} rgb - RGB 字符串（如 "FF0000"）
+ * @returns {string} 十六进制颜色代码（如 "#FF0000"）
+ */
+function rgbToHex(rgb) {
+    if (!rgb) return null;
+
+    // 如果已经是十六进制格式
+    if (rgb.startsWith('#')) return rgb;
+
+    // 如果是 ARGB 格式（8位），去掉前两位（Alpha通道）
+    if (rgb.length === 8) {
+        rgb = rgb.substring(2);
+    }
+
+    // 添加 # 前缀
+    return '#' + rgb.toUpperCase();
+}
