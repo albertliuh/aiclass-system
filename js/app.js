@@ -173,38 +173,42 @@ createApp({
          * 提交答案
          */
         submitAnswer() {
-            if (!this.hasAnswer) return;
+            // 如果有答案，记录并显示反馈
+            if (this.hasAnswer) {
+                const question = this.currentQuestion;
+                const userAns = this.currentQuestion.type === '多选'
+                    ? this.userAnswer.sort().join('')
+                    : String(this.userAnswer);
 
-            const question = this.currentQuestion;
-            const userAns = this.currentQuestion.type === '多选'
-                ? this.userAnswer.sort().join('')
-                : String(this.userAnswer);
+                const isCorrect = checkAnswer(this.userAnswer, question.answer, question.type);
 
-            const isCorrect = checkAnswer(this.userAnswer, question.answer, question.type);
+                // 记录答题
+                this.currentExamAnswers.push({
+                    questionId: question.id,
+                    question: question.question,
+                    userAnswer: userAns,
+                    correctAnswer: question.answer,
+                    isCorrect: isCorrect
+                });
 
-            // 记录答题
-            this.currentExamAnswers.push({
-                questionId: question.id,
-                question: question.question,
-                userAnswer: userAns,
-                correctAnswer: question.answer,
-                isCorrect: isCorrect
-            });
+                // 更新统计
+                if (isCorrect) {
+                    this.currentExamCorrect++;
+                } else {
+                    this.currentExamIncorrect++;
+                }
 
-            // 更新统计
-            if (isCorrect) {
-                this.currentExamCorrect++;
+                // 保存答案反馈信息（用于在下一题顶部显示）
+                this.lastAnswerFeedback = {
+                    questionIndex: this.currentQuestionIndex + 1,
+                    userAnswer: userAns,
+                    correctAnswer: question.answer,
+                    isCorrect: isCorrect
+                };
             } else {
-                this.currentExamIncorrect++;
+                // 没有答案，清除反馈信息
+                this.lastAnswerFeedback = null;
             }
-
-            // 保存答案反馈信息（用于在下一题顶部显示）
-            this.lastAnswerFeedback = {
-                questionIndex: this.currentQuestionIndex + 1,
-                userAnswer: userAns,
-                correctAnswer: question.answer,
-                isCorrect: isCorrect
-            };
 
             // 检查是否是最后一题
             if (this.currentQuestionIndex < this.currentExamQuestions.length - 1) {
@@ -212,10 +216,14 @@ createApp({
                 this.currentQuestionIndex++;
                 this.resetAnswer();
             } else {
-                // 是最后一题，自动交卷
-                setTimeout(() => {
+                // 是最后一题，如果有答案则延迟交卷，否则直接交卷
+                if (this.hasAnswer) {
+                    setTimeout(() => {
+                        this.finishExam();
+                    }, 1500); // 延迟1.5秒，让用户看到最后一题的反馈
+                } else {
                     this.finishExam();
-                }, 1500); // 延迟1.5秒，让用户看到最后一题的反馈
+                }
             }
         },
 
