@@ -421,6 +421,15 @@ createApp({
                     block: 'start'
                 });
             }
+        },
+
+        /**
+         * 高亮显示文本中的"不"字
+         */
+        highlightText(text) {
+            if (!text) return '';
+            // 将所有"不"字替换为带有黄色背景的 span 标签
+            return text.replace(/不/g, '<span class="highlight-char">不</span>');
         }
     },
 

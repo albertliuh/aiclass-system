@@ -105,7 +105,7 @@
                 <!-- 当前题目 -->
                 <div class="question-card">
                     <div class="question-type">{{ currentQuestion.type }}</div>
-                    <div class="question-text">{{ currentQuestion.question }}</div>
+                    <div class="question-text" v-html="highlightText(currentQuestion.question)"></div>
 
                     <!-- 单选题和判断题 -->
                     <div v-if="currentQuestion.type === '单选' || currentQuestion.type === '判断'" class="options">
@@ -195,7 +195,7 @@
                                 {{ answer.isCorrect ? '✓ 正确' : '✗ 错误' }}
                             </span>
                         </div>
-                        <div class="review-question">{{ answer.question }}</div>
+                        <div class="review-question" v-html="highlightText(answer.question)"></div>
                         <div v-if="!answer.isCorrect" class="review-answers">
                             <p>你的答案: {{ answer.userAnswer }}</p>
                             <p>正确答案: {{ answer.correctAnswer }}</p>
@@ -247,7 +247,7 @@
                         <span class="review-question-type">{{ q.type }}</span>
                     </div>
 
-                    <div class="review-question-text">{{ q.question }}</div>
+                    <div class="review-question-text" v-html="highlightText(q.question)"></div>
 
                     <div class="review-options">
                         <div v-for="(value, key) in q.options" :key="key"

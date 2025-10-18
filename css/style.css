@@ -13,6 +13,13 @@ body {
     color: #333;
 }
 
+/* 高亮字符样式 - 黄色背景 */
+.highlight-char {
+    background-color: #fef08a;
+    padding: 0 2px;
+    font-weight: bold;
+}
+
 .container {
     max-width: 800px;
     margin: 0 auto;
